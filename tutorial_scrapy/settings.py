@@ -17,10 +17,18 @@ MONGO_URI = 'mongodb://admin:123456@localhost:27017'
 # MONGO_URI = 'localhost'
 MONGO_DB = 'scrapy_test'
 
+# MySQL连接信息
+MYSQL_HOST = 'localhost'
+MYSQL_PORT = 3306
+MYSQL_USER = 'root'
+MYSQL_PASSWORD = "123456"
+MYSQL_DB = 'scrapy_test'
+
 # 定义Item Pipeline信息,定义优先级，数字越小越先调用
 ITEM_PIPELINES = {
     'tutorial_scrapy.pipelines.TextPipeline':300,
-    'tutorial_scrapy.pipelines.MongoPipeline':400
+    'tutorial_scrapy.pipelines.MysqlPipeline':400
+    # 'tutorial_scrapy.pipelines.MongoPipeline':400
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

@@ -1,5 +1,6 @@
 from scrapy.exceptions import DropItem
 import pymongo
+import pymysql
 
 class TextPipeline:
     """实现筛选text大于50的Item"""
@@ -48,12 +49,52 @@ class MongoPipeline:
         """当Spider关闭时，这个方法被调用。"""
         self.client.close()
 
+class MysqlPipeline:
+    """使用mysql存储"""
+    def __init__(self,mysql_host,mysql_port,mysql_user,mysql_password,mysql_db):
+        self.mysql_host = mysql_host
+        self.mysql_port = mysql_port
+        self.mysql_user = mysql_user
+        self.mysql_password = mysql_password
+        self.mysql_db = mysql_db
 
+    @classmethod
+    def from_crawler(cls,crawler):
+        """拿取配置信息"""
+        return cls(
+            mysql_host = crawler.settings.get('MYSQL_HOST'),
+            mysql_port = crawler.settings.get('MYSQL_PORT'),
+            mysql_user = crawler.settings.get('MYSQL_USER'),
+            mysql_password = crawler.settings.get('MYSQL_PASSWORD'),
+            mysql_db = crawler.settings.get('MYSQL_DB')
+        )
+    
+    def open_spider(self,spider):
+        self.connect = pymysql.connect(
+            host = self.mysql_host,
+            port = self.mysql_port,
+            user = self.mysql_user,
+            password = self.mysql_password,
+            db = self.mysql_db,
+            charset = 'utf8'
+        )
+        self.cursor = self.connect.cursor()
+
+    def process_item(self,item,spider):
+        sql = f"""
+        insert into scrapy(text,author,tags) values("{item['text']}","{item['author']}","{item['tags']}")
+        """
+        try:
+            self.cursor.execute(sql)
+            self.connect.commit()
+        except:
+            self.connect.rollback()
+        return item
+
+    def close_spider(self,spider):
+        self.cursor.close()
+        self.connect.close()
 
 
 if __name__ == "__main__":
-    client = pymongo.MongoClient('mongodb://admin:123456@localhost:27017')
-    db = client['test']
-    col = db['test']
-    col.insert_one({'key':'value'})
-    client.close()
+    pass
